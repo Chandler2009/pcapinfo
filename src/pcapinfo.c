@@ -31,7 +31,7 @@ static inline void printerr(const char* err, size_t len)
 
 static inline int usage()
 {
-    printerr("Usage: ./pcapinfo NB_THREADS(>=1) FILE\n", 39);
+    printerr("Usage: ./pcapinfo NB_THREADS(>1) FILE [..files]\n", 39);
     return EXIT_FAILURE;
 }
 
@@ -203,12 +203,17 @@ int main(int ac, const char *av[])
     if (ac < 3)
         return usage();
 
+    int nb_threads = atoi(av[1]);
+
+    if (nb_threads < 2)
+      return usage();
+
     pcap_t* file;
 
     for (int i = 2; i < ac; ++i)
         if ((file = open_pcap_file(av[i])))
         {
-            if (!pool && !(pool = threadpool_new(atoi(av[1]), THREADPOOL_QUEUE_SIZE)))
+            if (!pool && !(pool = threadpool_new(nb_threads, THREADPOOL_QUEUE_SIZE)))
             {
                 printerr("Invalid threadpool.\n", 20);
                 pthread_mutex_destroy(&_display_lock);
